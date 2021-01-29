@@ -19,6 +19,8 @@ func main() {
 
 	server := fiber.New()
 
+	server.Static("/", "./public/index.html")
+
 	server.Use(func(c *fiber.Ctx) error {
 		if websocket.IsWebSocketUpgrade(c) {
 			c.Locals("allowed", true)
@@ -48,7 +50,7 @@ func main() {
 		fmt.Println("ikisocket error occurred")
 	})
 	ikisocket.On(ikisocket.EventMessage, func(ep *ikisocket.EventPayload) {
-		fmt.Println(ep.SocketAttributes["user_id"], "connection closed")
+		fmt.Println("recieved message from", ep.SocketAttributes["user_id"])
 
 		message := Message{}
 
@@ -59,11 +61,16 @@ func main() {
 		}
 
 		if message.Data == "ping" {
-			reply, _ := json.Marshal(Message{
+			reply, err := json.Marshal(Message{
 				Data: "pong",
 			})
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
 
 			ep.Kws.Emit(reply)
+			fmt.Println("sent message to", ep.SocketAttributes["user_id"])
 		}
 
 	})

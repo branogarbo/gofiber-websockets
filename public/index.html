@@ -1,0 +1,19 @@
+<html>
+   <body>
+      <button onclick="sendMessage()">hey</button> 
+
+      <script>
+         const ws = new WebSocket('ws://localhost:3004/ws/brian');
+
+         ws.onmessage = event => {
+            console.log('reply from server: ', JSON.parse(event.data).data);
+         }
+
+         function sendMessage() {
+            ws.send(JSON.stringify({
+               data: 'ping'
+            }))
+         }
+      </script>
+   </body>
+</html>
