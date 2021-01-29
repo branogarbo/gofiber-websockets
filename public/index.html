@@ -6,7 +6,7 @@
          const ws = new WebSocket('ws://localhost:3004/ws/brian');
 
          ws.onmessage = event => {
-            console.log('reply from server: ', JSON.parse(event.data).data);
+            console.log('reply from server:', JSON.parse(event.data).data);
          }
 
          function sendMessage() {
