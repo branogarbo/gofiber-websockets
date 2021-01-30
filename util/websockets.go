@@ -10,10 +10,9 @@ import (
 )
 
 func SetupWS(server *fiber.App) {
-	clients := make(map[string]string)
+	clients := make(map[string]int)
 
 	server.Use("/ws", func(c *fiber.Ctx) error {
-		fmt.Println("YAHHHHHHH")
 		if websocket.IsWebSocketUpgrade(c) {
 			c.Locals("allowed", true)
 			return c.Next()
@@ -25,24 +24,21 @@ func SetupWS(server *fiber.App) {
 	////////////////////////////////////
 
 	ikisocket.On(ikisocket.EventConnect, func(ep *ikisocket.EventPayload) {
-		fmt.Println(ep.Kws.GetAttribute("user_id"), "connected")
+		fmt.Println(ep.Kws.GetAttribute("UUID"), "connected")
 	})
-
 	ikisocket.On(ikisocket.EventDisconnect, func(ep *ikisocket.EventPayload) {
-		delete(clients, ep.Kws.GetAttribute("user_id"))
-		fmt.Println(ep.SocketAttributes["user_id"], "disconnected")
+		delete(clients, ep.Kws.GetAttribute("UUID"))
+		fmt.Println(ep.SocketAttributes["UUID"], "disconnected")
 	})
-
 	ikisocket.On(ikisocket.EventClose, func(ep *ikisocket.EventPayload) {
-		delete(clients, ep.SocketAttributes["user_id"])
-		fmt.Println(ep.SocketAttributes["user_id"], "connection closed")
+		delete(clients, ep.SocketAttributes["UUID"])
+		fmt.Println(ep.SocketAttributes["UUID"], "connection closed")
 	})
-
 	ikisocket.On(ikisocket.EventError, func(ep *ikisocket.EventPayload) {
 		fmt.Println("ikisocket error occurred")
 	})
 	ikisocket.On(ikisocket.EventMessage, func(ep *ikisocket.EventPayload) {
-		fmt.Println("recieved message from", ep.SocketAttributes["user_id"])
+		fmt.Println("recieved message from", ep.SocketAttributes["UUID"])
 
 		message := Message{}
 
@@ -62,20 +58,18 @@ func SetupWS(server *fiber.App) {
 			}
 
 			ep.Kws.Emit(reply)
-			fmt.Println("sent message to", ep.SocketAttributes["user_id"])
+			fmt.Println("sent message to", ep.SocketAttributes["UUID"])
 		}
 
 	})
 
 	////////////////////////////////////
 
-	server.Get("/ws/:id", ikisocket.New(func(kws *ikisocket.Websocket) {
-		userId := kws.Params("id")
+	server.Get("/ws", ikisocket.New(func(kws *ikisocket.Websocket) {
+		clients[kws.UUID] = len(clients)
 
-		clients[userId] = kws.UUID
+		kws.SetAttribute("UUID", kws.UUID)
 
-		kws.SetAttribute("user_id", userId)
-
-		kws.Broadcast([]byte(fmt.Sprintf("%s connected", userId)), true)
+		kws.Broadcast([]byte(fmt.Sprintf("%s connected", kws.UUID)), true)
 	}))
 }
