@@ -3,7 +3,7 @@
       <button onclick="sendMessage()">ping</button> 
 
       <script>
-         const ws = new WebSocket('ws://localhost:3004/ws/brian');
+         const ws = new WebSocket('ws://localhost:3004/ws/brian'); // change for production
 
          ws.onmessage = event => {
             console.log('reply from server:', JSON.parse(event.data).data);
